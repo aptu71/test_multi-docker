@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t aptu71/react-test -f Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true aptu71/react-test npm run test 
+
+after_success:
+  - docker build -t aptu71/client ./client
+  - docker build -t aptu71/worker ./worker
+  - docker build -t aptu71/nginx ./nginx
+  - docker build -t aptu71/server ./server
+
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+  - docker push aptu71/client
+  - docker push aptu71/worker
+  - docker push aptu71/nginx
+  - docker push aptu71/server
