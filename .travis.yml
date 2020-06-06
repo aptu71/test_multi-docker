@@ -6,29 +6,30 @@ before_install:
   - docker build -t aptu71/react-test -f ./client/Dockerfile.dev ./client
 
 script:
-  - docker run -e CI=true aptu71/react-test npm run test 
+  - docker run aptu71/react-test npm test -- --coverage
 
 after_success:
   - docker build -t aptu71/client ./client
-  - docker build -t aptu71/worker ./worker
   - docker build -t aptu71/nginx ./nginx
   - docker build -t aptu71/server ./server
-
+  - docker build -t aptu71/worker ./worker
+  # Log in to the docker CLI
   - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
-
+  # Take those images and push them to docker hub
   - docker push aptu71/client
-  - docker push aptu71/worker
   - docker push aptu71/nginx
   - docker push aptu71/server
+  - docker push aptu71/worker
 
 deploy:
   provider: elasticbeanstalk
-  region: "us-east-1"
-  app: "multi-docker"
-  env: "MultiDocker-env"
-  bucket_name: "elasticbeanstalk-us-east-1-085557256654"
-  bucket_path: "multi-docker"
+  region: us-east-1 
+  app: multi-docker
+  env: MultiDocker-env
+  bucket_name: elasticbeanstalk-us-east-1-085557256654
+  bucket_path: docker-multi
   on:
     branch: master
   access_key_id: $AWS_ACCESS_KEY
-  secret_access_key: $AWS_SECRET_KEY
+  secret_access_key:
+    secure: $AWS_SECRET_KEY
